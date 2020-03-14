@@ -1,0 +1,204 @@
+<head>
+        <meta charset="utf-8">
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+        <link href='/stylesheet2.css' rel='stylesheet'>
+	
+        <style>
+        
+        body {
+            padding-top: 25px;
+            margin: auto;
+            width: 650px;
+            font: 18px arial;
+            padding-bottom: 50px;
+        }	
+        
+        </style>
+        </head>
+        
+        <body>
+            <div class='visualParent'>
+                <div class='titleHeader'>
+                    <div>Yelp Profiles as Predictors for Business Closing</div>
+                    <div>Visualizing Machine Learning Feature Success</div>
+                </div>
+                <div class='authorName'>DAVID LEE & DAVID ZANE</div>
+        
+                <div id='main'  class='chooseParameters'>
+                        <div style='margin-bottom: 30px;'>Check at least 5 boxes</div>
+
+                    <div class="checkbox-grid">
+                            <div><input onclick='checkedBox()' type="checkbox" id="stars" value="a" /><label for="stars">Stars</label></div>
+                            <div><input onclick='checkedBox()' type="checkbox" id="reviews" value="b" /><label for="reviews">Review Count</label></div>
+                            <div><input onclick='checkedBox()' type="checkbox" id="tips" value="c" /><label for="tips">Tip Count</label></div>
+                            <div><input onclick='checkedBox()' type="checkbox" id="chain" value="d" /><label for="chain">Chain</label></div>
+                            <div><input onclick='checkedBox()' type="checkbox" id="1dist" value="e" /><label for="1dist">.1 Cout</label></div>
+                            <div><input onclick='checkedBox()' type="checkbox" id="3dist" value="f" /><label for="3dist">.3 Count</label></div>
+                            <div><input onclick='checkedBox()' type="checkbox" id="tip_sent" value="g" /><label for="tip_sent">Mean Tip Sentmiment</label></div>
+                            <div><input onclick='checkedBox()' type="checkbox" id="shop" value="h" /><label for="shop">Is Shopping</label></div>
+                            <div><input onclick='checkedBox()' type="checkbox" id="rest" value="i" /><label for="rest">Is Restaurant</label></div>
+        
+                    </div>                      
+                </div>            
+            </div>
+        
+        <svg id="chart" width="650" height="420"></svg>
+        
+        <select style='display: none' id="year"></select>
+        
+        <input type="checkbox" id="sort">	
+        Toggle sort 
+        
+        <script>
+        
+        d3.csv("info.csv").then(d => chart(d));
+        var chosen_one = 'abcd'
+            
+       //  d3.json("data.json").then(d => chart2(d));
+
+        const feature_ids = ['stars', 'reviews', 'tips', 'chain', '1dist', '3dist', 'tip_sent', 'shop', 'rest']
+        function checkedBox(){
+            var feature_string = ''
+            feature_ids.forEach(feature => {
+            var checkbox_obj = document.getElementById(feature)
+            if (checkbox_obj.checked == true){
+                feature_string += checkbox_obj.value
+                feature_string = sortString(feature_string)
+                console.log(feature, feature_string)
+                if (feature_string.length >= 5){
+                    chosen_one = feature_string
+                    chart.update(feature_string)
+                }
+                else {
+                    chart.update(0)
+                }
+                
+
+            }
+        });
+        }
+
+        function sortString(str){
+            var arr = str.split('');
+            var sorted = arr.sort();
+            return sorted.join('');
+        }
+
+        const headers = ['logACC', 'logROC', 'gbtACC', 'gbtROC']
+
+           
+        
+        function chart(csv) {
+
+        
+            csv.forEach(function(d) {
+                var dates = d.date.split("-");
+             //   console.log('dates', dates)
+                d.year = dates[0]; d.month = dates[1];
+               // console.log('year', d.year)
+                //console.log('months', d.month)
+                d.value = +d.value;
+                //console.log('value', d.value)
+                return d;
+            })
+
+            var months = [...new Set(csv.map(d => d.month))],
+                years  = [...new Set(csv.map(d => d.year))];
+        
+            var options = d3.select("#year").selectAll("option")
+                .data(years)
+                .enter().append("option")
+                .text(d => d)
+
+                
+        
+            var svg = d3.select("#chart"),
+                margin = {top: 25, bottom: 10, left: 25, right: 25},
+                width = +svg.attr("width") - margin.left - margin.right,
+                height = +svg.attr("height") - margin.top - margin.bottom;
+        
+            var x = d3.scaleBand()
+                .range([margin.left, width - margin.right])
+                .padding(0.1)
+                .paddingOuter(0.2)
+            
+            var y = d3.scaleLinear()
+                .range([height - margin.bottom, margin.top])
+        
+            var xAxis = g => g
+                .attr("transform", "translate(0," + (height - margin.bottom) + ")")
+                .call(d3.axisBottom(x).tickSizeOuter(0))
+        
+            var yAxis = g => g
+                .attr("transform", "translate(" + margin.left + ",0)")
+                .call(d3.axisLeft(y))
+        
+            svg.append("g")
+                .attr("class", "x-axis")
+        
+            svg.append("g")
+                .attr("class", "y-axis")
+            console.log('kahuna', typeof(d3.select("#year").property("value")))
+            update("abcd", 0)
+            
+        
+            function update(year, speed) {
+        
+                var data = csv.filter(f => f.year == year)
+                console.log('data', data)
+                console.log('value', data.value)
+                var max_value = d3.max(data, d => d.value)
+
+                //var max_of_array = Math.max.apply(Math, data.value)
+
+                y.domain([0, max_value]).nice()
+        
+                svg.selectAll(".y-axis").transition().duration(speed)
+                    .call(yAxis);
+        
+                data.sort(d3.select("#sort").property("checked")
+                    ? (a, b) => b.value - a.value
+                    : (a, b) => months.indexOf(a.month) - months.indexOf(b.month))
+        
+                console.log('infooooo', data.map(d => d.month))
+               // x.domain(header.map)
+                x.domain(data.map(d => d.month))
+        
+                svg.selectAll(".x-axis").transition().duration(speed)
+                    .call(xAxis)
+        
+                console.log('hellllo', data)
+                var bar = svg.selectAll(".bar")
+                    //.data(headers)
+                    .data(data, d => d.month)
+        
+                bar.exit().remove();
+        
+                bar.enter().append("rect")
+                    .attr("class", "bar")
+                    .attr("fill", "steelblue")
+                    .attr("width", x.bandwidth())
+                    .merge(bar)
+                .transition().duration(speed)
+                    .attr("x", d => x(d.month))
+                    .attr("y", d => y(d.value))
+                    .attr("height", d => y(0) - y(d.value))
+            }
+        
+            chart.update = update;
+        }
+        
+    /* var select = d3.select("#year")
+            .style("border-radius", "5px")
+            .on("change", function() {
+                chart.update(chosen_one, 750)
+            })*/
+        
+        var checkbox = d3.select("#sort")
+            .style("margin-left", "45%")
+            .on("click", function() {
+                chart.update(chosen_one, 750)
+            })
+        
+        </script>
+        </body>

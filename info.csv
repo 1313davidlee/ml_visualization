@@ -1,0 +1,13 @@
+date,value
+abcd-logACC,1
+abcd-logROC,2
+abcd-gbtAcc,3
+abcd-gbtROC,4
+abcde-logACC,1
+abcde-logROC,1
+abcde-gbtAcc,1
+abcde-gbtROC,1
+abcdef-logACC,4
+abcdef-logROC,3
+abcdef-gbtAcc,2
+abcdef-gbtROC,1
