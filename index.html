@@ -19,8 +19,8 @@
         <body>
             <div class='visualParent'>
                 <div class='titleHeader'>
-                    <div>Yelp Profiles as Predictors for Business Closing</div>
-                    <div>Visualizing Machine Learning Feature Success</div>
+                    <div style='font-size: 25px; margin-bottom: 5px;'>Yelp Profiles as Predictors for Business Closing</div>
+                    <div style='font-size: 20px'>Visualizing Machine Learning Feature Success</div>
                 </div>
                 <div class='authorName'>DAVID LEE & DAVID ZANE</div>
         
@@ -41,18 +41,35 @@
                     </div>                      
                 </div>            
             </div>
+
+            <div class='labelParent'>
+                <div class='labelUnits'>Logistic Regression Accuracy</div>
+                <div class='labelUnits'>GBT Accuracy</div>
+                <div class='labelUnits'>Logisitic Regression ROCAUC</div>
+                <div class='labelUnits'>GBT ROCAUC</div>
+            
+            </div>
+            <div class='dataParent'>
+                    <div class='labelUnits' id='logACC'>0</div>
+                    <div class='labelUnits' id='gbtACC'>0</div>
+                    <div class='labelUnits' id='logROC'>0</div>
+                    <div class='labelUnits' id='gbtROC'>0</div>
+                
+            </div>
+
+            <div class='warning' id='warning'>
+                NEED TO CHECK AT LEAST 5 BOXES
+            </div>
         
         <svg id="chart" width="650" height="420"></svg>
         
         <select style='display: none' id="year"></select>
         
-        <input type="checkbox" id="sort">	
-        Toggle sort 
+        <input style='display: none' type="checkbox" id="sort">	
         
         <script>
         
-        d3.csv("info.csv").then(d => chart(d));
-        var chosen_one = 'abcd'
+        d3.csv("data.csv").then(d => chart(d));
             
        //  d3.json("data.json").then(d => chart2(d));
 
@@ -68,9 +85,12 @@
                 if (feature_string.length >= 5){
                     chosen_one = feature_string
                     chart.update(feature_string)
+                    document.getElementById('warning').style.display = 'none'
                 }
                 else {
                     chart.update(0)
+                    document.getElementById('warning').style.display = 'flex'
+
                 }
                 
 
@@ -85,6 +105,8 @@
         }
 
         const headers = ['logACC', 'logROC', 'gbtACC', 'gbtROC']
+
+        
 
            
         
@@ -151,7 +173,7 @@
 
                 //var max_of_array = Math.max.apply(Math, data.value)
 
-                y.domain([0, max_value]).nice()
+                y.domain([0, 1]).nice()
         
                 svg.selectAll(".y-axis").transition().duration(speed)
                     .call(yAxis);
@@ -168,6 +190,22 @@
                     .call(xAxis)
         
                 console.log('hellllo', data)
+
+                data.forEach(function(d) {
+                    if(d.month == 'logROC'){
+                        document.getElementById('logROC').innerHTML = Number((d.value).toFixed(3))
+                    }
+                    else if(d.month == 'logACC'){
+                        document.getElementById('logACC').innerHTML = Number((d.value).toFixed(3))
+                    }
+                    else if(d.month == 'gbtROC'){
+                        document.getElementById('gbtROC').innerHTML = Number((d.value).toFixed(3))
+                    }
+                    else if(d.month == 'gbtACC'){
+                        document.getElementById('gbtACC').innerHTML = Number((d.value).toFixed(3))
+                    }
+
+                })
                 var bar = svg.selectAll(".bar")
                     //.data(headers)
                     .data(data, d => d.month)
